@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Confirmation - DripHorizon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
+            </h1>
+        </div>
+
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            <a href="{{ url_for('about') }}">About Us</a>
+            <a href="{{ url_for('cart') }}" class="cart-link active">Confirmation</a>
+        </nav>
+
+        <div class="header-actions">
+            <a href="#loginModal">Login</a>
+            <a href="#signInModal">Sign In</a>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        <div class="cart-container">
+            <h2>Order Confirmation</h2>
+
+            {% if single_item %}
+                <p>The following item has been selected:</p>
+                <div class="cart-items-list">
+                    <div class="cart-item">
+                        <img src="{{ url_for('static', filename=single_item.img) }}" alt="{{ single_item.name }}">
+                        <div class="item-details">
+                            <h4>{{ single_item.name }}</h4>
+                            <p>Price: ₱{{ "%.2f"|format(single_item.price) }}</p>
+                        </div>
+                        <div class="item-quantity">Qty: {{ single_item.quantity }}</div>
+                        <div class="item-subtotal">₱{{ "%.2f"|format(single_item.subtotal) }}</div>
+                    </div>
+                </div>
+
+                <div class="cart-summary">
+                    <h3>Total Purchase: ₱{{ "%.2f"|format(single_item.subtotal) }}</h3>
+                    <a href="{{ url_for('finalize_purchase') }}" class="checkout-button">Finalize Purchase</a>
+                </div>
+            {% else %}
+                <p class="empty-cart-message">No item was recently added or selected. Please choose a product from the shop.</p>
+                <div style="text-align: center;">
+                    <a href="{{ url_for('shop') }}" class="checkout-button" style="display: block; width: 200px; margin: 20px auto;">Go to Shop</a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Login</h2>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Don't have an account? <a href="#signInModal">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="signInModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Sign Up</h2>
+            <form action="{{ url_for('sign') }}" method="POST">
+                <div class="form-group">
+                    <label for="signInUsername">Username</label>
+                    <input type="text" id="signInUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signInPassword">Password</label>
+                    <input type="password" id="signInPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Sign Up</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a href="#loginModal">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sport Collection - DripHorizon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
+            </h1>
+        </div>
+
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            <a href="{{ url_for('about') }}">About Us</a>
+        </nav>
+
+        <div class="header-actions">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="#loginModal">Login</a>
+                <a href="#signInModal">Sign In</a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="category-nav">
+        <a href="{{ url_for('shop') }}" data-category="all">All</a>
+        <a href="{{ url_for('women') }}" data-category="women">Women</a>
+        <a href="{{ url_for('men') }}" data-category="men">Men</a>
+        <a href="{{ url_for('kid') }}" data-category="kid">Kid</a>
+        <a href="{{ url_for('sport') }}" data-category="sport" class="{% if current_category == 'sport' %}active{% endif %}">Sport</a>
+    </nav>
+
+    <section class="product-grid">
+        <div class="product-card sport all">
+            <div class="product-image-container">
+                <img src="{{ url_for('static', filename='35.jpg') }}" alt="Sport Shoe 1" class="product-image">
+            </div>
+            <div class="product-info">
+                <h3 class="product-title">Sport Shoe 1</h3>
+                <p class="product-price">₱99.99</p>
+                <a href="{{ url_for('add_to_cart', product_id='35') }}" class="add-to-cart">Add to Cart</a>
+            </div>
+        </div>
+
+        <div class="product-card sport all">
+            <div class="product-image-container">
+                <img src="{{ url_for('static', filename='36.jpg') }}" alt="Sport Shoe 2" class="product-image">
+            </div>
+            <div class="product-info">
+                <h3 class="product-title">Sport Shoe 2</h3>
+                <p class="product-price">₱119.99</p>
+                <a href="{{ url_for('add_to_cart', product_id='36') }}" class="add-to-cart">Add to Cart</a>
+            </div>
+        </div>
+
+        <div class="product-card sport all">
+            <div class="product-image-container">
+                <img src="{{ url_for('static', filename='37.jpg') }}" alt="Sport Shoe 3" class="product-image">
+            </div>
+            <div class="product-info">
+                <h3 class="product-title">Sport Shoe 3</h3>
+                <p class="product-price">₱89.99</p>
+                <a href="{{ url_for('add_to_cart', product_id='37') }}" class="add-to-cart">Add to Cart</a>
+            </div>
+        </div>
+
+        <div class="product-card sport all">
+            <div class="product-image-container">
+                <img src="{{ url_for('static', filename='38.jpg') }}" alt="Sport Accessory 1" class="product-image">
+            </div>
+            <div class="product-info">
+                <h3 class="product-title">Sport Accessory 1</h3>
+                <p class="product-price">₱29.99</p>
+                <a href="{{ url_for('add_to_cart', product_id='38') }}" class="add-to-cart">Add to Cart</a>
+            </div>
+        </div>
+
+    </section>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Login</h2>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Don't have an account? <a href="#signInModal">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="signInModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Sign Up</h2>
+            <form action="{{ url_for('sign') }}" method="POST">
+                <div class="form-group">
+                    <label for="signInUsername">Username</label>
+                    <input type="text" id="signInUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signInPassword">Password</label>
+                    <input type="password" id="signInPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Sign Up</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a href="#loginModal">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+
+    <a href="#" class="back-to-top-fixed">Back to Top</a>
+</body>
+</html>

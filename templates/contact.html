@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact DripHorizon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
+            </h1>
+        </div>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            <a href="{{ url_for('about') }}">About Us</a>
+        </nav>
+        <div class="header-actions">
+              <a href="#loginModal">Login</a>
+              <a href="#signInModal">Sign In</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="contact-section">
+            <h2>We'd Love to Hear From You</h2>
+            <p style="text-align: center; margin-bottom: 20px; color: #666;">Have a question about an order, our products, or just want to say hello?</p>
+
+            <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject">
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required></textarea>
+                </div>
+                <button type="submit">Send Message</button>
+            </form>
+        </section>
+    </main>
+
+    <div id="loginModal" class="modal">...</div>
+    <div id="signInModal" class="modal">...</div>
+
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+</body>
+</html>

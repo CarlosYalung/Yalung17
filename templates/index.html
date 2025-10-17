@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DripHorizon - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
+            </h1>
+        </div>
+
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            <a href="{{ url_for('about') }}">About Us</a>
+        </nav>
+
+        <div class="header-actions">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="#loginModal">Login</a>
+                <a href="#signInModal">Sign In</a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>Welcome to DripHorizon</h1>
+            <p>Discover the perfect balance of comfort, durability, and style for every occasion with our versatile, high-quality footwear collection.</p>
+        </div>
+        <a href="{{ url_for('shop') }}" class="hero-button">Shop Now</a>
+        <div class="hero-img">
+            </div>
+    </section>
+
+    <section class="quality-about-section">
+        <div class="quality-row">
+            <img src="{{ url_for('static', filename='39.jpg') }}" alt="Large Quality Image" class="quality-image-large">
+            <div class="quality-section">
+                <h2>Only Quality</h2>
+                <p>Over 23,000 pairs sold with a 97% 5-star rating. That's how you know the quality and comfort shows from the moment you put our shoes on.</p>
+                <div class="button-container">
+                    <a href="{{ url_for('shop') }}" class="shop-now-button">Shop Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="about-us-row">
+            <img src="{{ url_for('static', filename='40.jpg') }}" alt="Large About Us Image" class="about-us-image-large">
+            <div class="about-us-section">
+                <h2>About Us</h2>
+                <p>Generations of <strong>experienced artisans of Pilipino origin</strong> are involved in this great and exciting project. Our mission?</p>
+                <p>Creating <strong>super-comfortable</strong> shoes with an <strong>appealing design</strong> and, above all, <strong>top quality</strong>.</p>
+                <div class="button-container">
+                    <a href="{{ url_for('about') }}" class="read-more-button">Read More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+
+    <a href="#" class="back-to-top-fixed">Back to Top</a>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Login</h2>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Don't have an account? <a href="#signInModal">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="signInModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Sign Up</h2>
+            <form action="{{ url_for('sign') }}" method="POST">
+                <div class="form-group">
+                    <label for="signInUsername">Username</label>
+                    <input type="text" id="signInUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signInPassword">Password</label>
+                    <input type="password" id="signInPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Sign Up</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a href="#loginModal">Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

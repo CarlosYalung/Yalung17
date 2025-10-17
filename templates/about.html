@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About DripHorizon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
+            </h1>
+        </div>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            <a href="{{ url_for('about') }}">About Us</a>
+        </nav>
+        <div class="header-actions">
+              <a href="#loginModal">Login</a>
+              <a href="#signInModal">Sign In</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="about-us-hero">
+            <h1>Our Journey</h1>
+            <h2>Creating the perfect balance of comfort, durability, and style.</h2>
+
+            <p>DripHorizon was founded on a shared passion for exceptional footwear that **never compromises** on quality or fit. We recognized a need in the market for shoes that are not only aesthetically pleasing but also built to last, providing all-day comfort for the modern, dynamic life.</p>
+
+            <p>Our project is deeply rooted in **Pilipino craftsmanship**, involving generations of experienced artisans. This heritage ensures that every stitch, every cut, and every material choice meets the highest standard of excellence. Our mission is simple: to deliver **super-comfortable** shoes with an **appealing design** and, above all, **top quality**.</p>
+
+            <p>We believe your footwear should elevate your stride, wherever your journey takes you. Thank you for choosing DripHorizon.</p>
+
+            <a href="{{ url_for('index') }}" class="back-home-button">Back to Home</a>
+        </section>
+    </main>
+
+    <div id="loginModal" class="modal">...</div>
+    <div id="signInModal" class="modal">...</div>
+
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+</body>
+</html>

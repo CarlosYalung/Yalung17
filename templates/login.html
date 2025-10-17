@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DripHorizon - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+<body>
+    <header>
+        </header>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form login-form">
+            <h2>Log In to DripHorizon</h2>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Log In</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+</body>
+</html>
