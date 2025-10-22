@@ -319,9 +319,9 @@ footer {
 }
 
 
-/* --- LOGIN SPECIFIC STYLES --- */
+/* --- LOGIN --- */
 .login-form button {
-    background-color: #007bff; /* Blue */
+    background-color: #007bff;
     color: white;
     padding: 12px;
     border: none;
@@ -336,9 +336,9 @@ footer {
     background-color: #0056b3;
 }
 
-/* --- SIGN UP (REGISTRATION) SPECIFIC STYLES --- */
+/* SIGN UP REGISTRATION */
 .sign-form button {
-    background-color: #28a745; /* Green */
+    background-color: #28a745;
     color: white;
     padding: 12px;
     border: none;
@@ -388,7 +388,7 @@ footer {
 }
 
 
-/* === PRODUCT GRID STYLES === */
+/* GRID  */
 
 .product-grid {
     display: grid;
@@ -457,7 +457,7 @@ footer {
 }
 
 
-/* STYLES (Login/Sign In) === */
+/* Login/Sign*/
 .modal {
     position: fixed;
     top: 0;
@@ -534,7 +534,7 @@ footer {
     margin-top: 10px;
 }
 
-/* Different button colors for Login and Sign Up */
+/* Login and Sign  */
 #loginModal .form-actions button {
     background-color: #007bff;
     color: white;
