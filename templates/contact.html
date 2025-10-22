@@ -13,46 +13,123 @@
                 <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
             </h1>
         </div>
+
         <nav>
             <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('contact') }}">Contact</a>
             <a href="{{ url_for('about') }}">About Us</a>
         </nav>
+
         <div class="header-actions">
-              <a href="#loginModal">Login</a>
-              <a href="#signInModal">Sign In</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="#loginModal">Login</a>
+                <a href="#signInModal">Sign In</a>
+            {% endif %}
         </div>
     </header>
 
-    <main>
-        <section class="contact-section">
-            <h2>We'd Love to Hear From You</h2>
-            <p style="text-align: center; margin-bottom: 20px; color: #666;">Have a question about an order, our products, or just want to say hello?</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
-            <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
+    <main>
+        <section class="contact-section contact-info-display">
+            <h2>Reach Out to DripHorizon</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: #666;">We're here to assist you with any questions about our products or your order.</p>
+
+            <div class="contact-details-grid">
+
+                <div class="detail-block">
+                    <h3>Our Address</h3>
+                    <p>
+                        Poblacion Ward 2<br>
+                        Minglanilla, Cebu<br>
+                        Central Visayas, Philippines
+                    </p>
                 </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+
+                <div class="detail-block">
+                    <h3>Call or Text</h3>
+                    <p>
+                        Mobile: <a href="tel:+639610960951">09610960951</a><br>
+                        Available 9:00 AM - 5:00 PM
+                    </p>
                 </div>
-                <div class="form-group">
-                    <label for="subject">Subject</label>
-                    <input type="text" id="subject" name="subject">
+
+                <div class="detail-block">
+                    <h3>Email Us</h3>
+                    <p>
+                        General Inquiries:<br>
+                        <a href="mailto:DripHorizon@gmail.com">DripHorizon@gmail.com.com</a>
+                    </p>
                 </div>
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" name="message" required></textarea>
-                </div>
-                <button type="submit">Send Message</button>
-            </form>
+
+            </div>
+
+            <p style="text-align: center; margin-top: 40px; font-style: italic; color: #999;">
+                Note: All online purchases are tracked through your user account after successful login.
+            </p>
+
         </section>
     </main>
 
-    <div id="loginModal" class="modal">...</div>
-    <div id="signInModal" class="modal">...</div>
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Login</h2>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Don't have an account? <a href="#signInModal">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="signInModal" class="modal">
+        <div class="modal-content">
+            <a href="#" class="close-button">&times;</a>
+            <h2>Sign Up</h2>
+            <form action="{{ url_for('sign') }}" method="POST">
+                <div class="form-group">
+                    <label for="signInUsername">Username</label>
+                    <input type="text" id="signInUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signInPassword">Password</label>
+                    <input type="password" id="signInPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Sign Up</button>
+                </div>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a href="#loginModal">Login</a>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <p>&copy; 2025 DripHorizon</p>
