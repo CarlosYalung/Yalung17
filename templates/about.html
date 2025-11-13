@@ -16,13 +16,18 @@
         <nav>
             <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('contact') }}">Contact</a>
-            <a href="{{ url_for('about') }}">About Us</a>
+            <a href="{{ url_for('about') }}" class="active">About Us</a>
         </nav>
         <div class="header-actions">
-              <a href="#loginModal">Login</a>
-              <a href="#signInModal">Sign In</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="profile-link">Hello, {{ session.get('username') }}!</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="#loginModal">Login</a>
+                <a href="#signInModal">Sign In</a>
+            {% endif %}
         </div>
-    </header>
+        </header>
 
     <main>
         <section class="about-us-hero">

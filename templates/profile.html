@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Dashboard - {{ username }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style>
+        /* --- General Profile Layout --- */
+        .profile-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .profile-sidebar {
+            width: 300px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        .profile-main {
+            flex-grow: 1;
+        }
+        .profile-pic-area img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #ff6f61; /* Accent color */
+            margin-bottom: 15px;
+        }
+        .profile-pic-area h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .upload-form input[type="file"] {
+            margin-bottom: 10px;
+            display: block;
+            width: 100%;
+        }
+        .upload-form button {
+            width: 100%;
+        }
+        /* --- Order Table Styles --- */
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .order-table th, .order-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .order-table th {
+            background-color: #eee;
+        }
+        /* --- Cancellation/Status Styles (For Clarity) --- */
+        .cancellation-cell form {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .cancellation-cell textarea {
+            resize: vertical;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .cancel-btn {
+            background-color: #dc3545; /* Red */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .cancel-btn:hover {
+            background-color: #c82333;
+        }
+        /* Status Colors - Ensure these match your database 'status' field */
+        .status-processing { color: orange; font-weight: bold; }
+        .status-shipped { color: blue; font-weight: bold; }
+        .status-delivered { color: green; font-weight: bold; }
+        .status-cancelled { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> **DripHorizon**
+            </h1>
+        </div>
+
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            <a href="{{ url_for('about') }}">About Us</a>
+        </nav>
+
+        <div class="header-actions">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="profile-link active">Hello, **{{ session.get('username') }}**!</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="#loginModal">Login</a>
+                <a href="#signInModal">Sign In</a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        <div class="profile-container">
+
+            <div class="profile-sidebar">
+                <div class="profile-pic-area">
+                    <img src="{{ url_for('static', filename='profiles/' + profile_pic) }}" alt="Profile Picture">
+                    <h2>Welcome, **{{ username }}**!</h2>
+                    <hr>
+                </div>
+
+                <h3>Update Profile Picture</h3>
+                <form action="{{ url_for('upload_photo') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                    <label for="file">Select Photo (.jpg, .png, etc.):</label>
+                    <input type="file" name="file" id="file" required>
+
+                    <button type="submit" class="checkout-button">Set New Profile Picture</button>
+                </form>
+            </div>
+
+            <div class="profile-main">
+
+                <section class="order-history">
+                    <h3>🛒 Your Order Tracking History</h3>
+                    <p>You may **optionally cancel** an order in the **Processing** status by providing a reason below.</p>
+
+                    {% if orders %}
+                        <table class="order-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Product & Price</th>
+                                    <th>Status & Tracking</th>
+                                    <th>Shipping Address</th>
+                                    <th>Action (Cancel/Message)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>#{{ order[3] }}</td> <td>
+                                        **{{ order[0] }}** (x{{ order[1] }}) <br><small>₱{{ "%.2f"|format(order[2]) }}</small> </td>
+                                    <td>
+                                        <span class="status-{{ order[6].lower() }}">{{ order[6] }}</span> <br><small>Tracking: {{ order[7] or 'N/A' }}</small> </td>
+                                    <td>
+                                        **{{ order[4] }}** <br><small>Tel: {{ order[5] }}</small> </td>
+                                    <td class="cancellation-cell">
+                                        {% if order[6] == 'Processing' %}
+                                            <form action="{{ url_for('cancel_order', order_id=order[3]) }}" method="POST">
+                                                <textarea name="reason" placeholder="Reason for cancellation (required)" rows="2" required></textarea>
+                                                <button type="submit" class="cancel-btn">Cancel Order</button>
+                                            </form>
+                                        {% elif order[6] == 'Cancelled' %}
+                                            <p class="status-cancelled">Order Cancelled</p>
+                                        {% else %}
+                                            <p>No cancellation allowed once **{{ order[6] }}**.</p>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>You have not placed any orders yet. Start shopping!</p>
+                    {% endif %}
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 DripHorizon</p>
+    </footer>
+</body>
+</html>
