@@ -5,96 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>User Dashboard - {{ username }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-    <style>
-        /* --- General Profile Layout --- */
-        .profile-container {
-            display: flex;
-            gap: 30px;
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .profile-sidebar {
-            width: 300px;
-            padding: 20px;
-            background-color: #f8f8f8;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: fit-content;
-        }
-        .profile-main {
-            flex-grow: 1;
-        }
-        .profile-pic-area img {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #ff6f61; /* Accent color */
-            margin-bottom: 15px;
-        }
-        .profile-pic-area h2 {
-            margin-top: 0;
-            color: #333;
-        }
-        .upload-form input[type="file"] {
-            margin-bottom: 10px;
-            display: block;
-            width: 100%;
-        }
-        .upload-form button {
-            width: 100%;
-        }
-        /* --- Order Table Styles --- */
-        .order-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .order-table th, .order-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        .order-table th {
-            background-color: #eee;
-        }
-        /* --- Cancellation/Status Styles (For Clarity) --- */
-        .cancellation-cell form {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .cancellation-cell textarea {
-            resize: vertical;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .cancel-btn {
-            background-color: #dc3545; /* Red */
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .cancel-btn:hover {
-            background-color: #c82333;
-        }
-        /* Status Colors - Ensure these match your database 'status' field */
-        .status-processing { color: orange; font-weight: bold; }
-        .status-shipped { color: blue; font-weight: bold; }
-        .status-delivered { color: green; font-weight: bold; }
-        .status-cancelled { color: red; font-weight: bold; }
-    </style>
 </head>
 <body>
     <header>
         <div class="header-left">
             <h1 class="header-title">
-                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> **DripHorizon**
+                <img src="{{ url_for('static', filename='5.jpg') }}" alt="Logo" /> DripHorizon
             </h1>
         </div>
 
@@ -102,11 +18,11 @@
             <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('contact') }}">Contact</a>
             <a href="{{ url_for('about') }}">About Us</a>
-        </nav>
+            </nav>
 
         <div class="header-actions">
             {% if session.get('user_id') %}
-                <a href="{{ url_for('profile') }}" class="profile-link active">Hello, **{{ session.get('username') }}**!</a>
+                <a href="{{ url_for('profile') }}" class="profile-link active"> {{ session.get('username') }}</a>
                 <a href="{{ url_for('logout') }}">Logout</a>
             {% else %}
                 <a href="#loginModal">Login</a>
@@ -131,45 +47,66 @@
             <div class="profile-sidebar">
                 <div class="profile-pic-area">
                     <img src="{{ url_for('static', filename='profiles/' + profile_pic) }}" alt="Profile Picture">
-                    <h2>Welcome, **{{ username }}**!</h2>
+                    <h2>Welcome, {{ username }}</h2>
                     <hr>
                 </div>
 
                 <h3>Update Profile Picture</h3>
                 <form action="{{ url_for('upload_photo') }}" method="POST" enctype="multipart/form-data" class="upload-form">
-                    <label for="file">Select Photo (.jpg, .png, etc.):</label>
-                    <input type="file" name="file" id="file" required>
-
-                    <button type="submit" class="checkout-button">Set New Profile Picture</button>
+                    <label for="file-upload" class="custom-file-upload">
+                        Select Photo
+                    </label>
+                    <input type="file" name="file" id="file-upload" required onchange="this.form.submit()">
                 </form>
             </div>
 
             <div class="profile-main">
 
                 <section class="order-history">
-                    <h3>🛒 Your Order Tracking History</h3>
-                    <p>You may **optionally cancel** an order in the **Processing** status by providing a reason below.</p>
+                    <h3>🛒 Your Order History</h3>
+                    <p>Orders in **Processing** status can be cancelled below. All prices shown are the **Total Price** for the item quantity.</p>
 
                     {% if orders %}
                         <table class="order-table">
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
-                                    <th>Product & Price</th>
-                                    <th>Status & Tracking</th>
+                                    <th>Product & Qty</th>
+                                    <th>Total Price</th>
+                                    <th>Payment Method</th>
                                     <th>Shipping Address</th>
-                                    <th>Action (Cancel/Message)</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for order in orders %}
                                 <tr>
-                                    <td>#{{ order[3] }}</td> <td>
-                                        **{{ order[0] }}** (x{{ order[1] }}) <br><small>₱{{ "%.2f"|format(order[2]) }}</small> </td>
+                                    <td>#{{ order[3] }}</td>
+
                                     <td>
-                                        <span class="status-{{ order[6].lower() }}">{{ order[6] }}</span> <br><small>Tracking: {{ order[7] or 'N/A' }}</small> </td>
+                                        **{{ order[0] }}** <br>Qty: {{ order[1] }}
+                                    </td>
+
                                     <td>
-                                        **{{ order[4] }}** <br><small>Tel: {{ order[5] }}</small> </td>
+                                        ₱{{ "%.2f"|format(order[2]) }}
+                                    </td>
+
+                                    <td>
+                                        {{ order[8] }}
+                                    </td>
+
+                                    <td>
+                                        **{{ order[4] }}** <br><small>Tel: {{ order[5] }}</small>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-{{ order[6].lower() }}">{{ order[6] }}</span>
+                                        {% if order[6] == 'Cancelled' and order[7] %}
+                                            <br><small style="color: #dc3545;">Reason: {{ order[7] }}</small>
+                                        {% endif %}
+                                    </td>
+
                                     <td class="cancellation-cell">
                                         {% if order[6] == 'Processing' %}
                                             <form action="{{ url_for('cancel_order', order_id=order[3]) }}" method="POST">
@@ -177,9 +114,9 @@
                                                 <button type="submit" class="cancel-btn">Cancel Order</button>
                                             </form>
                                         {% elif order[6] == 'Cancelled' %}
-                                            <p class="status-cancelled">Order Cancelled</p>
+                                            <p class="status-cancelled">Cancelled</p>
                                         {% else %}
-                                            <p>No cancellation allowed once **{{ order[6] }}**.</p>
+                                            <p>No action.</p>
                                         {% endif %}
                                     </td>
                                 </tr>

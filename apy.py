@@ -7,24 +7,20 @@ app = Flask(__name__)
 app.secret_key = 'your_drip_horizon_secret_key_12345'
 
 DATABASE = 'shoe_store.db'
-# Configuration for Photo Uploads
 UPLOAD_FOLDER = 'static/profiles'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-# Helper function for checking allowed file extensions
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# ----------------- Database Initialization (Tracking Number REMOVED) -----------------
 def init_db():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # 1. Users Table (No Change)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,
@@ -38,11 +34,6 @@ def init_db():
         print("Adding 'profile_pic' column to users table...")
         cursor.execute("ALTER TABLE users ADD COLUMN profile_pic TEXT DEFAULT 'default_profile.png'")
 
-    # 2. Orders/Purchases Table (Tracking Number REMOVED from CREATE statement)
-    # NOTE: SQLite makes removing columns complicated. For simplicity and to prevent
-    # errors in new/existing installations, we ensure the new schema is used,
-    # and existing columns (like status and reason) are checked/added.
-    # The 'tracking_number' column will remain in old databases but won't be used/fetched.
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY,
@@ -56,11 +47,11 @@ def init_db():
             shipping_phone TEXT,
             status TEXT DEFAULT 'Processing',           
             cancellation_reason TEXT DEFAULT NULL,  
+            payment_method TEXT,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     ''')
 
-    # Ensure necessary columns exist for existing databases
     try:
         cursor.execute("SELECT status FROM orders LIMIT 1")
     except sqlite3.OperationalError:
@@ -71,6 +62,19 @@ def init_db():
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE orders ADD COLUMN cancellation_reason TEXT DEFAULT NULL")
 
+    try:
+        cursor.execute("SELECT payment_method FROM orders LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Adding 'payment_method' column to orders table...")
+        cursor.execute("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT 'Unknown'")
+
+    # Ensure the 'admin' user exists for testing
+    try:
+        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', 'admin'))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        pass
+
     conn.commit()
     conn.close()
 
@@ -80,7 +84,6 @@ with app.app_context():
         os.makedirs(app.config['UPLOAD_FOLDER'])
     init_db()
 
-# ----------------- Product Data (Unchanged) -----------------
 PRODUCTS = {
     '21': {'name': 'Womens Sneaker 1', 'price': 79.99, 'img': '21.jpg'},
     '22': {'name': 'Womens Sandal 1', 'price': 59.99, 'img': '22.jpg'},
@@ -103,7 +106,6 @@ PRODUCTS = {
 }
 
 
-# ----------------- Page Routes (Unchanged) -----------------
 
 @app.route('/')
 def index():
@@ -145,8 +147,6 @@ def sport():
     return render_template('sport.html', current_category='sport')
 
 
-# ----------------- Profile Route (Tracking Number REMOVED) -----------------
-
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
@@ -164,17 +164,17 @@ def profile():
     user_data = cursor.fetchone()
     profile_pic = user_data[1] if user_data and user_data[1] else 'default_profile.png'
 
-    # 2. Get Order History (Tracking Number REMOVED from SELECT)
     cursor.execute("""
         SELECT 
             product_name,           -- Index 0
             quantity,               -- Index 1
-            price_at_purchase,      -- Index 2
+            price_at_purchase,      -- Index 2 (This is the total price for the order)
             id AS order_id,         -- Index 3
             shipping_address,       -- Index 4
             shipping_phone,         -- Index 5
             status,                 -- Index 6
-            cancellation_reason     -- Index 7
+            cancellation_reason,    -- Index 7
+            payment_method          -- Index 8
         FROM orders
         WHERE user_id = ?
         ORDER BY order_id DESC
@@ -189,7 +189,6 @@ def profile():
                            profile_pic=profile_pic)
 
 
-# ----------------- Photo Upload Route (Unchanged) -----------------
 
 @app.route('/upload_photo', methods=['POST'])
 def upload_photo():
@@ -230,7 +229,6 @@ def upload_photo():
         return redirect(url_for('profile'))
 
 
-# ----------------- Cart & Purchase Logic (Unchanged) -----------------
 
 @app.route('/add_to_cart/<product_id>')
 def add_to_cart(product_id):
@@ -239,6 +237,7 @@ def add_to_cart(product_id):
     if product:
         session.pop('shipping_data', None)
         session['last_added_id'] = product_id
+        session['current_quantity'] = 1
 
         flash(f'Thank you for selecting {product["name"]}! Review your order and enter shipping details below.',
               'success')
@@ -249,21 +248,35 @@ def add_to_cart(product_id):
         return redirect(url_for('shop'))
 
 
-@app.route('/cart')
+@app.route('/cart', methods=['GET', 'POST'])
 def cart():
+    if request.method == 'POST':
+        product_id = request.form.get('product_id_to_buy')
+        try:
+            new_quantity = int(request.form.get('quantity', 1))
+            session['current_quantity'] = max(1, min(10, new_quantity))  # Limit 1 to 10
+        except ValueError:
+            session['current_quantity'] = 1
+
+        return redirect(url_for('cart', last_added_id=product_id))
+
     last_added_id = request.args.get('last_added_id') or session.get('last_added_id')
     single_item = None
+
+    current_quantity = session.get('current_quantity', 1)
 
     if last_added_id:
         product = PRODUCTS.get(last_added_id)
 
         if product:
+            subtotal = product['price'] * current_quantity
+
             single_item = {
                 'id': last_added_id,
                 'name': product['name'],
                 'price': product['price'],
-                'quantity': 1,
-                'subtotal': product['price'],
+                'quantity': current_quantity,
+                'subtotal': subtotal,
                 'img': product['img']
             }
 
@@ -276,10 +289,14 @@ def submit_shipping_info():
     shipping_name = request.form.get('shipping_name')
     shipping_address = request.form.get('shipping_address')
     shipping_phone = request.form.get('shipping_phone')
+    payment_method = request.form.get('payment_method')
+
+    quantity = session.get('current_quantity', 1)
+
     user_id = session.get('user_id')
 
-    if not product_id or not shipping_name or not shipping_address or not shipping_phone:
-        flash("Please fill in all shipping details.", 'danger')
+    if not product_id or not shipping_name or not shipping_address or not shipping_phone or not payment_method:
+        flash("Please fill in all shipping and payment details.", 'danger')
         return redirect(url_for('cart', last_added_id=product_id))
 
     product = PRODUCTS.get(product_id)
@@ -292,10 +309,13 @@ def submit_shipping_info():
         'name': shipping_name,
         'address': shipping_address,
         'phone': shipping_phone,
+        'payment_method': payment_method,
+        'quantity': quantity,
         'product_id': product_id
     }
 
     session.pop('last_added_id', None)
+    session.pop('current_quantity', None)
 
     if user_id:
         return redirect(url_for('finalize_purchase'))
@@ -314,11 +334,16 @@ def finalize_purchase():
         return redirect(url_for('shop'))
 
     product_id = shipping_data['product_id']
+    quantity = shipping_data['quantity']
+
     product = PRODUCTS.get(product_id)
 
     if not product:
         flash("Error: Product details could not be found to complete the purchase.", 'danger')
         return redirect(url_for('shop'))
+
+    # Calculate final total price for the order
+    final_price = product['price'] * quantity
 
     if user_id:
         conn = sqlite3.connect(DATABASE)
@@ -326,33 +351,35 @@ def finalize_purchase():
 
         # Inserts into orders table
         cursor.execute("""
-            INSERT INTO orders (user_id, product_id, product_name, quantity, price_at_purchase, shipping_name, shipping_address, shipping_phone)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO orders (user_id, product_id, product_name, quantity, price_at_purchase, shipping_name, shipping_address, shipping_phone, payment_method)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             user_id,
             product_id,
             product['name'],
-            1,
-            product['price'],
+            quantity,
+            final_price,
             shipping_data['name'],
             shipping_data['address'],
-            shipping_data['phone']
+            shipping_data['phone'],
+            shipping_data['payment_method']
         ))
 
         conn.commit()
         conn.close()
 
-        flash(f"Thank you! Your order of {product['name']} is placed and tracked.", 'success')
+        flash(
+            f"Thank you! Your order of {quantity} x {product['name']} using {shipping_data['payment_method']} is placed and tracked.",
+            'success')
         return redirect(url_for('shop'))
 
     else:
         flash(
-            f"Thank you for your purchase of {product['name']}! Your order is confirmed and will be delivered to {shipping_data['address']}.",
+            f"Thank thank you for your purchase of {quantity} x {product['name']}! Your order is confirmed and will be delivered to {shipping_data['address']}.",
             'success')
         return redirect(url_for('shop'))
 
 
-# ----------------- USER ORDER CANCELLATION ROUTE (Unchanged) -----------------
 
 @app.route('/cancel_order/<int:order_id>', methods=['POST'])
 def cancel_order(order_id):
@@ -371,7 +398,6 @@ def cancel_order(order_id):
     cursor = conn.cursor()
 
     try:
-        # 1. Verify the order belongs to the user and is in a cancellable state ('Processing')
         cursor.execute("SELECT status FROM orders WHERE id = ? AND user_id = ?", (order_id, user_id))
         order_status = cursor.fetchone()
 
@@ -380,7 +406,6 @@ def cancel_order(order_id):
         elif order_status[0] != 'Processing':
             flash(f"Order #{order_id} is already '{order_status[0]}' and cannot be cancelled.", 'danger')
         else:
-            # 2. Update status AND save the cancellation reason persistently
             cursor.execute("UPDATE orders SET status = ?, cancellation_reason = ? WHERE id = ?",
                            ('Cancelled', reason, order_id))
             conn.commit()
@@ -396,8 +421,6 @@ def cancel_order(order_id):
 
     return redirect(url_for('profile'))
 
-
-# ----------------- Authentication Routes (Unchanged) -----------------
 
 @app.route('/signup', methods=['GET', 'POST'])
 def sign():
@@ -439,8 +462,12 @@ def login():
             session['user_id'] = user[0]
             session['username'] = user[1]
 
-            flash(f'Welcome back, {username}! You are now logged in.', 'success')
-            return redirect(url_for('index'))
+            flash(f'Welcome back, {user[1]}! You are now logged in.', 'success')
+
+            if user[1] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            else:
+                return redirect(url_for('index'))
         else:
             flash('Invalid username or password.', 'danger')
             return redirect(url_for('shop') + '#loginModal')
@@ -454,10 +481,70 @@ def logout():
     session.pop('username', None)
     session.pop('shipping_data', None)
     session.pop('last_added_id', None)
+    session.pop('current_quantity', None)  # Clear quantity on logout
     flash("You have been successfully logged out.", 'info')
     return redirect(url_for('index'))
 
 
-# ----------------- Run the application -----------------
+
+@app.route('/admin')
+def admin_dashboard():
+    if session.get('username') != 'admin':
+        flash('Access denied. You must be an administrator.', 'danger')
+        return redirect(url_for('index'))
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 
+            o.id, 
+            u.username, 
+            o.product_name, 
+            o.quantity, 
+            o.price_at_purchase, 
+            o.shipping_address, 
+            o.shipping_name,
+            o.shipping_phone,
+            o.status,
+            o.payment_method
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        WHERE o.status != 'Cancelled'  -- Filters out cancelled products
+        ORDER BY o.id DESC
+    """)
+    orders = cursor.fetchall()
+    conn.close()
+
+    return render_template('admin.html', orders=orders)
+
+
+@app.route('/admin/update_order_status', methods=['POST'])
+def update_order_status():
+    if session.get('username') != 'admin':
+        flash('Access denied. You must be an administrator.', 'danger')
+        return redirect(url_for('index'))
+
+    order_id = request.form.get('order_id')
+    new_status = request.form.get('status')
+
+    if not order_id or not new_status:
+        flash('Missing order ID or status.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (new_status, order_id))
+        conn.commit()
+        flash(f'Order #{order_id} status updated to "{new_status}" successfully.', 'success')
+    except Exception as e:
+        flash(f'Error updating order status: {e}', 'danger')
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin_dashboard'))
+
 if __name__ == '__main__':
     app.run(debug=True)
