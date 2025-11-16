@@ -481,7 +481,7 @@ def logout():
     session.pop('username', None)
     session.pop('shipping_data', None)
     session.pop('last_added_id', None)
-    session.pop('current_quantity', None)  # Clear quantity on logout
+    session.pop('current_quantity', None)
     flash("You have been successfully logged out.", 'info')
     return redirect(url_for('index'))
 
